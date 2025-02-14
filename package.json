@@ -1,11 +1,13 @@
 {
-  "name": "product_research_ai",
+  "name": "producthunt-research",
   "version": "1.0.0",
-  "description": "AI-powered product research assistant that fetches data from ProductHunt and processes it using GPT",
+  "description": "ProductHunt research tool with AI analysis",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js",
+    "build": "cd frontend && npm install && npm run build",
+    "vercel-build": "npm run build"
   },
   "keywords": [
     "product-research",
@@ -17,10 +19,16 @@
   "license": "ISC",
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.24.0",
-    "axios": "^1.6.2",
+    "axios": "^1.6.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.21.2",
-    "openai": "^4.20.1"
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "openai": "^4.26.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
