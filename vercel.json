@@ -36,10 +36,5 @@
         "cache-control": "public, max-age=0, must-revalidate"
       }
     }
-  ],
-  "env": {
-    "OPENAI_API_KEY": "@openai_api_key",
-    "PRODUCTHUNT_API_KEY": "@producthunt_api_key",
-    "PRODUCTHUNT_CLIENT_SECRET": "@producthunt_client_secret"
-  }
+  ]
 } 
