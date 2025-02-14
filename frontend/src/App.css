@@ -379,50 +379,84 @@ h1 {
 }
 
 .result-section {
-  background-color: white;
-  border-radius: 8px;
+  background: white;
+  border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-.keywords-section {
+.result-section h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1d1d1f;
   margin-bottom: 2rem;
 }
 
+/* 关键词区域样式 */
+.keywords-section {
+  margin-bottom: 3rem;
+}
+
+.keywords-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.keyword-tag {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+  padding: 0.5rem 1rem;
+  border-radius: 980px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 产品网格样式 */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
+  gap: 2rem;
+  margin-bottom: 3rem;
 }
 
 .product-card {
   background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
   padding: 1.5rem;
-  transition: transform 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
 }
 
 .product-card h3 {
-  color: #2d3748;
-  margin-bottom: 0.5rem;
   font-size: 1.25rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
 }
 
 .product-card .tagline {
-  color: #4a5568;
-  font-size: 0.875rem;
+  color: #515154;
+  font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .product-card .description {
-  color: #718096;
-  font-size: 0.875rem;
+  color: #86868b;
+  font-size: 0.9rem;
+  line-height: 1.5;
   margin-bottom: 1rem;
 }
 
@@ -430,52 +464,66 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
-  color: #718096;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #86868b;
 }
 
-.product-card .votes {
+.product-card .links {
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #3b82f6;
-}
-
-.product-card .link {
-  color: #3b82f6;
-  text-decoration: none;
-}
-
-.product-card .link:hover {
-  text-decoration: underline;
-}
-
-.report-content {
-  line-height: 1.6;
-  color: #333;
-}
-
-.report-content strong {
-  color: #2d3748;
-  font-weight: 600;
-}
-
-.report-content h1,
-.report-content h2,
-.report-content h3 {
-  color: #2d3748;
-  margin: 1.5rem 0 1rem;
-}
-
-.report-content p {
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.report-content a {
-  color: #3b82f6;
+.product-card .links a {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
   text-decoration: none;
+  transition: all 0.2s;
 }
 
-.report-content a:hover {
-  text-decoration: underline;
+.product-card .website-link {
+  background: #0071e3;
+  color: white;
+}
+
+.product-card .ph-link {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d1d1f;
+}
+
+.product-card .topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.product-card .topic-tag {
+  background: rgba(0, 0, 0, 0.05);
+  color: #515154;
+  padding: 0.25rem 0.75rem;
+  border-radius: 980px;
+  font-size: 0.8rem;
+}
+
+/* 分析内容样式 */
+.analysis-content {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #1d1d1f;
+}
+
+.analysis-content strong {
+  color: #0071e3;
+  font-weight: 600;
+}
+
+.analysis-content br {
+  margin-bottom: 1rem;
+  display: block;
+  content: "";
 }

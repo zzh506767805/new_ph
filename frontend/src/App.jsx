@@ -194,23 +194,29 @@ function App() {
                 .sort((a, b) => b.votesCount - a.votesCount)
                 .map((product, index) => (
                   <div key={index} className="product-card">
-                  <h3>{product.name}</h3>
-                  <div className="tagline">{product.tagline}</div>
-                  <div className="description">{product.description}</div>
-                  <div className="meta">
-                    <div className="votes">
-                      <span>👍</span>
-                      <span>{product.votesCount}</span>
+                    <h3>{product.name}</h3>
+                    <div className="tagline">{product.tagline}</div>
+                    <div className="description">{product.description}</div>
+                    <div className="meta">
+                      <span className="votes">👍 {product.votesCount}</span>
+                      <span className="date">{new Date(product.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <a href={product.url} target="_blank" rel="noopener noreferrer" className="link">
-                      查看详情
-                    </a>
+                    <div className="links">
+                      <a href={product.website} target="_blank" rel="noopener noreferrer" className="website-link">访问网站</a>
+                      <a href={product.url} target="_blank" rel="noopener noreferrer" className="ph-link">ProductHunt页面</a>
+                    </div>
+                    {product.topics && product.topics.length > 0 && (
+                      <div className="topics">
+                        {product.topics.map((topic, i) => (
+                          <span key={i} className="topic-tag">{topic}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
-          <div className="report-content" dangerouslySetInnerHTML={{ __html: result.content }} />
+          <div className="analysis-content" dangerouslySetInnerHTML={{ __html: result.content }} />
         </div>
       )}
     </div>
