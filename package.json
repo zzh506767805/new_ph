@@ -1,0 +1,26 @@
+{
+  "name": "product_research_ai",
+  "version": "1.0.0",
+  "description": "AI-powered product research assistant that fetches data from ProductHunt and processes it using GPT",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "product-research",
+    "producthunt",
+    "gpt",
+    "feishu"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.24.0",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "openai": "^4.20.1"
+  }
+}
