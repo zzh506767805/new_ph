@@ -20,26 +20,19 @@ const axiosConfig = {
     'Authorization': `Bearer ${process.env.PRODUCTHUNT_API_KEY}`,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Origin': 'https://www.producthunt.com',
-    'Referer': 'https://www.producthunt.com/',
-    'Host': 'api.producthunt.com',
-    'Connection': 'keep-alive',
-    'Sec-Ch-Ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-    'Sec-Ch-Ua-Mobile': '?0',
-    'Sec-Ch-Ua-Platform': '"macOS"',
-    'Sec-Fetch-Dest': 'empty',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Site': 'same-site',
-    'X-Requested-With': 'XMLHttpRequest'
+    'Accept-Encoding': 'gzip',
+    'User-Agent': 'Your-App-Name/1.0',
+    'Origin': null,
+    'Host': 'api.producthunt.com'
   },
   timeout: 30000,
-  maxRedirects: 5,
-  validateStatus: function (status) {
-    return status >= 200 && status < 500;
-  }
+  maxRedirects: 5
+};
+
+// 添加缓存对象
+const cache = {
+  data: new Map(),
+  timeout: 3600000 // 1小时缓存
 };
 
 // 生成相关关键词
@@ -63,6 +56,17 @@ async function generateKeywords(topic) {
 // 从ProductHunt获取数据
 async function searchProductHunt(keyword) {
   try {
+    // 检查缓存
+    const cacheKey = `ph_${keyword}`;
+    const now = Date.now();
+    if (cache.data.has(cacheKey)) {
+      const cachedData = cache.data.get(cacheKey);
+      if (now - cachedData.timestamp < cache.timeout) {
+        console.log('使用缓存数据，关键词:', keyword);
+        return cachedData.data;
+      }
+    }
+
     console.log('发送ProductHunt API请求，关键词:', keyword);
     
     const query = `
@@ -112,7 +116,7 @@ async function searchProductHunt(keyword) {
       return [];
     }
 
-    return response.data.data.posts.edges.map(({ node: post }) => ({
+    const results = response.data.data.posts.edges.map(({ node: post }) => ({
       name: post.name,
       tagline: post.tagline,
       description: post.description,
@@ -122,6 +126,14 @@ async function searchProductHunt(keyword) {
       createdAt: post.createdAt,
       topics: post.topics?.edges?.map(edge => edge.node.name) || []
     }));
+
+    // 存入缓存
+    cache.data.set(cacheKey, {
+      timestamp: now,
+      data: results
+    });
+
+    return results;
   } catch (error) {
     console.error('ProductHunt API请求失败:', {
       message: error.message,
