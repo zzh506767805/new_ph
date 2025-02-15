@@ -5,6 +5,24 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+// 验证环境变量
+const requiredEnvVars = {
+  'OPENAI_API_KEY': '用于GPT API调用',
+  'PRODUCTHUNT_CLIENT_ID': '用于ProductHunt OAuth认证的客户端ID',
+  'PRODUCTHUNT_CLIENT_SECRET': '用于ProductHunt OAuth认证的客户端密钥'
+};
+
+const missingEnvVars = Object.entries(requiredEnvVars)
+  .filter(([key]) => !process.env[key])
+  .map(([key, desc]) => `- ${key}: ${desc}`);
+
+if (missingEnvVars.length > 0) {
+  console.error('错误: 缺少必要的环境变量配置');
+  console.error('请确保已设置以下环境变量：');
+  console.error(missingEnvVars.join('\n'));
+  process.exit(1);
+}
+
 // 初始化OpenAI客户端
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -13,21 +31,52 @@ const openai = new OpenAI({
 
 // ProductHunt API配置
 const PRODUCTHUNT_API_URL = 'https://api.producthunt.com/v2/api/graphql';
+const PRODUCTHUNT_TOKEN_URL = 'https://api.producthunt.com/v2/oauth/token';
 
-// 配置axios
+// 请求配置
 const axiosConfig = {
   headers: {
-    'Authorization': `Bearer ${process.env.PRODUCTHUNT_API_KEY}`,
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
-    'Accept-Encoding': 'gzip',
-    'User-Agent': 'Your-App-Name/1.0',
-    'Origin': null,
-    'Host': 'api.producthunt.com'
+    'Content-Type': 'application/json'
   },
   timeout: 30000,
-  maxRedirects: 5
+  validateStatus: function (status) {
+    return status >= 200 && status < 500;
+  },
+  ...(process.env.HTTP_PROXY ? {
+    proxy: {
+      protocol: 'http',
+      host: process.env.HTTP_PROXY.split(':')[0],
+      port: parseInt(process.env.HTTP_PROXY.split(':')[1])
+    }
+  } : {})
 };
+
+// 获取OAuth访问令牌
+async function getProductHuntAccessToken() {
+  try {
+    const response = await axios.post(PRODUCTHUNT_TOKEN_URL, {
+      client_id: process.env.PRODUCTHUNT_CLIENT_ID,
+      client_secret: process.env.PRODUCTHUNT_CLIENT_SECRET,
+      grant_type: 'client_credentials'
+    }, axiosConfig);
+
+    if (!response.data?.access_token) {
+      throw new Error('获取访问令牌失败');
+    }
+
+    return response.data.access_token;
+  } catch (error) {
+    console.error('OAuth认证失败:', error.message);
+    if (error.response) {
+      console.error('响应状态:', error.response.status);
+      console.error('响应数据:', error.response.data);
+    }
+    throw error;
+  }
+}
+
+
 
 // 添加缓存对象
 const cache = {
@@ -56,6 +105,9 @@ async function generateKeywords(topic) {
 // 从ProductHunt获取数据
 async function searchProductHunt(keyword) {
   try {
+    // 获取访问令牌
+    const accessToken = await getProductHuntAccessToken();
+    
     // 检查缓存
     const cacheKey = `ph_${keyword}`;
     const now = Date.now();
@@ -67,27 +119,19 @@ async function searchProductHunt(keyword) {
       }
     }
 
-    console.log('发送ProductHunt API请求，关键词:', keyword);
-    
     const query = `
-      query($topic: String!) {
-        posts(first: 10, topic: $topic) {
+      query SearchPosts($query: String!) {
+        posts(first: 10, order: VOTES, search: $query) {
           edges {
             node {
-              id
               name
               tagline
               description
-              url
               votesCount
               website
               createdAt
               topics {
-                edges {
-                  node {
-                    name
-                  }
-                }
+                name
               }
             }
           }
@@ -95,36 +139,36 @@ async function searchProductHunt(keyword) {
       }
     `;
 
-    console.log('发送请求到:', PRODUCTHUNT_API_URL);
     const response = await axios.post(
       PRODUCTHUNT_API_URL,
       {
         query,
-        variables: { topic: keyword }
+        variables: { query: keyword }
       },
-      axiosConfig
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        ...axiosConfig
+      }
     );
-
-    if (response.status !== 200) {
-      console.error('API响应状态码:', response.status);
-      console.error('API响应头:', JSON.stringify(response.headers, null, 2));
-      console.error('API响应内容:', JSON.stringify(response.data, null, 2));
-    }
 
     if (!response.data?.data?.posts?.edges) {
       console.error('ProductHunt API响应格式错误:', JSON.stringify(response.data, null, 2));
       return [];
     }
 
-    const results = response.data.data.posts.edges.map(({ node: post }) => ({
-      name: post.name,
-      tagline: post.tagline,
-      description: post.description,
-      url: post.url,
-      votesCount: post.votesCount,
-      website: post.website,
-      createdAt: post.createdAt,
-      topics: post.topics?.edges?.map(edge => edge.node.name) || []
+    const results = response.data.data.posts.edges.map(({ node }) => ({
+      name: node.name,
+      tagline: node.tagline,
+      description: node.description || '',
+      url: node.website,
+      votesCount: node.votesCount,
+      website: node.website,
+      createdAt: node.createdAt,
+      topics: node.topics?.map(topic => topic.name) || []
     }));
 
     // 存入缓存
@@ -139,7 +183,6 @@ async function searchProductHunt(keyword) {
       message: error.message,
       status: error.response?.status,
       statusText: error.response?.statusText,
-      headers: error.response?.headers,
       data: error.response?.data
     });
     return [];
@@ -176,21 +219,30 @@ async function main(topic) {
     }
     console.log('生成的关键词:', keywords);
 
-    // 2. 搜索ProductHunt
+    // 2. 搜索ProductHunt - 先尝试第一个关键词
     let allProducts = [];
-    for (const keyword of keywords) {
-      const products = await searchProductHunt(keyword);
-      if (!products || !Array.isArray(products)) {
-        throw new Error(`搜索关键词"${keyword}"时发生错误`);
+    const firstKeyword = keywords[0];
+    const firstProducts = await searchProductHunt(firstKeyword);
+    if (!firstProducts || !Array.isArray(firstProducts) || firstProducts.length === 0) {
+      throw new Error(`使用第一个关键词"${firstKeyword}"搜索失败，未找到相关产品`);
+    }
+    allProducts = allProducts.concat(firstProducts);
+
+    // 如果第一个关键词成功，继续搜索其他关键词
+    for (let i = 1; i < keywords.length; i++) {
+      try {
+        const products = await searchProductHunt(keywords[i]);
+        if (products && Array.isArray(products)) {
+          allProducts = allProducts.concat(products);
+        }
+      } catch (error) {
+        console.warn(`搜索关键词"${keywords[i]}"时出错:`, error.message);
+        // 继续处理下一个关键词
       }
-      allProducts = allProducts.concat(products);
     }
 
     // 去重
     allProducts = Array.from(new Set(allProducts.map(p => JSON.stringify(p)))).map(p => JSON.parse(p));
-    if (allProducts.length === 0) {
-      throw new Error('未找到任何相关产品');
-    }
     console.log(`找到 ${allProducts.length} 个相关产品`);
 
     // 3. 使用GPT分析数据

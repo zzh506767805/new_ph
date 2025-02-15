@@ -39,6 +39,7 @@ npm install
 OPENAI_API_KEY=your_openai_api_key
 PRODUCTHUNT_API_KEY=your_producthunt_api_key
 PORT=3001
+HTTP_PROXY=127.0.0.1:7897
 ```
 
 4. 启动服务
@@ -98,4 +99,4 @@ npm run dev
 
 ## 许可证
 
-MIT License 
+MIT License
