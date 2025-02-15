@@ -12,7 +12,7 @@
 ## 技术栈
 
 - 后端：Node.js + Express
-- 前端：React + Vite
+- 前端：React + Next.js
 - AI：OpenAI GPT API
 - 数据源：ProductHunt API
 
